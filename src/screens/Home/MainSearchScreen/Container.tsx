@@ -35,10 +35,10 @@ export default function Container() {
   });
 
   const { repositories, totalCount } = useMemo(() => {
-    if (!data) return { repositories: [], totalCount: 0 };
+    if (!data) return { repositories: [], totalCount: "0" };
     return {
       repositories: data.pages.flatMap((page) => page.items),
-      totalCount: data.pages[0]?.total_count || 0,
+      totalCount: data.pages[0]?.total_count.toLocaleString() || "0",
     };
   }, [data]);
 

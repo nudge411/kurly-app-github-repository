@@ -1,24 +1,17 @@
 import { useCallback, memo } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import typography from "@/constants/typography";
 import { BaseText } from "@/components/atoms";
 import { Ionicons } from "@expo/vector-icons";
 import styled from "styled-components/native";
-import { useResponsiveSize } from "@/hooks";
-
+import { colors, typography } from "@/constants";
+import { hp, wp, sp } from "@/utils/responsive";
 interface Props {
   isFetchingNextPage: boolean;
   searchQuery: string;
   handleSearchChange: (text: string) => void;
   handleSearchSubmit: () => void;
-  totalCount: number;
+  totalCount: string;
   error: any;
   repositories: any[];
   handleEndReached: () => void;
@@ -34,7 +27,6 @@ const RepoItem = memo(({ item }: any) => (
 ));
 
 export default function Presenter(props: Props) {
-  const { hp, wp } = useResponsiveSize();
   const {
     isFetchingNextPage,
     searchQuery,
@@ -47,32 +39,49 @@ export default function Presenter(props: Props) {
     status,
   } = props;
 
-  console.log(hp(100));
   const renderItem = useCallback(({ item }) => <RepoItem item={item} />, []);
   const ListFooterComponent = useCallback(
-    () =>
-      isFetchingNextPage ? (
-        <Text style={styles.loading}>Loading more...</Text>
-      ) : null,
+    () => (isFetchingNextPage ? <Text>Loading more...</Text> : null),
     [isFetchingNextPage]
   );
+
   return (
     <Wrapper>
       <TitleWrapper>
-        <BaseText ft={"titleXXXL900"}>검색</BaseText>
+        <BaseText ft={"titleXXL900"}>검색</BaseText>
       </TitleWrapper>
       <SearchBarWrapper>
-        <TextInput
-          value={searchQuery}
-          onChangeText={handleSearchChange}
-          placeholder="Search repositories..."
-          returnKeyType="search"
-          onSubmitEditing={handleSearchSubmit}
-        />
-        <Ionicons name="search" size={24} color="black" />
+        <SearchBar>
+          <Ionicons name="search" size={24} color={"black"} />
+          <SearchInput
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.nativeEvent.text)}
+            style={{ fontFamily: "Pretendard-Regular", fontSize: 16 }}
+            placeholder={"검색어를 입력해주세요."}
+            blurOnSubmit={true}
+            enablesReturnKeyAutomatically={true}
+            onSubmitEditing={() => handleSearchSubmit()}
+            returnKeyType="search"
+          />
+          {searchQuery && (
+            <ClearButton onPress={() => handleSearchChange("")}>
+              <Ionicons name="close-circle" size={24} color={colors.gray_60} />
+            </ClearButton>
+          )}
+        </SearchBar>
+        <CancelButton>
+          <BaseText ft={"bodyM400"} color={colors.primary_50}>
+            취소
+          </BaseText>
+        </CancelButton>
       </SearchBarWrapper>
-      <Text>{totalCount}</Text>
-      {status === "pending" ? (
+      <CountWrapper>
+        <BaseText ft={"bodyM700"}>검색 결과 </BaseText>
+        <BaseText ft={"bodyM400"} color={colors.text_80}>
+          {totalCount}개 저장소
+        </BaseText>
+      </CountWrapper>
+      {/* {status === "pending" ? (
         <View>
           <BaseText ft={"titleXXXL900"}>Loading...</BaseText>
         </View>
@@ -97,24 +106,49 @@ export default function Presenter(props: Props) {
             </View>
           }
         />
-      )}
+      )} */}
     </Wrapper>
   );
 }
 
 const Wrapper = styled.View`
   flex: 1;
-  padding: 20px;
-  /* border: 1px solid red; */
+  padding: ${sp(20)}px;
 `;
 
 const TitleWrapper = styled.View`
-  padding: 16px;
+  padding: ${sp(16)}px;
   align-items: center;
 `;
 
 const SearchBarWrapper = styled.View`
   flex-direction: row;
-  border: 1px solid red;
-  background-color: #f0f0f0;
+  align-items: center;
+`;
+
+const SearchBar = styled.View`
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  padding: ${sp(10)}px ${sp(18)}px;
+  border-radius: 100px;
+  background-color: ${colors.gray_10};
+  border: 1px solid ${colors.gray_40};
+`;
+
+const SearchInput = styled.TextInput`
+  flex: 1;
+  height: ${hp(30)}px;
+  margin-left: ${wp(4)}px;
+`;
+
+const CancelButton = styled.TouchableOpacity`
+  padding: ${sp(10)}px;
+`;
+
+const ClearButton = styled.TouchableOpacity``;
+
+const CountWrapper = styled.View`
+  flex-direction: row;
+  margin: ${10}px 0;
 `;
