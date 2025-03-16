@@ -7,7 +7,8 @@ import {
   View,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-
+import typography from "@/constants/typography";
+import BaseText from "@/components/atoms/BaseText";
 interface Props {
   isFetchingNextPage: boolean;
   searchQuery: string;
@@ -71,7 +72,7 @@ export default function Presenter(props: Props) {
         <Text>{totalCount}</Text>
         {status === "pending" ? (
           <View style={styles.loadingContainer}>
-            <Text>Searching...</Text>
+            <BaseText ft={"titleXXXL900"}>Loading...</BaseText>
           </View>
         ) : status === "error" ? (
           <View style={styles.errorContainer}>
