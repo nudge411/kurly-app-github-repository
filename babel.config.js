@@ -1,5 +1,5 @@
 module.exports = {
-  presets: ["babel-preset-expo"], // 여기가 다릅니다 - Expo 프리셋 사용
+  presets: ["babel-preset-expo"],
   plugins: [
     [
       "module-resolver",

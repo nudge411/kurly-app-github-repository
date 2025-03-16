@@ -5,7 +5,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { BASE_URL } from "@/constants/config";
+import { BASE_URL } from "@/constants/api";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,

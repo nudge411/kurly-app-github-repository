@@ -1,7 +1,7 @@
 import api from "../../client";
 
 import { GitHubSearchParams, GitHubSearchResponse } from "./type";
-import { ENDPOINTS } from "@/constants/config";
+import { ENDPOINTS } from "@/constants/api";
 
 const githubApi = {
   searchRepositories: (params: GitHubSearchParams) =>
