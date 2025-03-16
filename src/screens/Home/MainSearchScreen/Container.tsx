@@ -3,7 +3,7 @@ import { decrement, increment } from "@/store/slices/counterSlice";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { githubApi } from "@/api/endpoints";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import useDebounce from "@/hooks/useDebounde";
+import { useDebounce } from "@/hooks";
 import Presenter from "./Presenter";
 
 export default function Container() {

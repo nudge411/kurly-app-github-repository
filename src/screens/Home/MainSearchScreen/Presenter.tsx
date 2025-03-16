@@ -8,7 +8,11 @@ import {
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import typography from "@/constants/typography";
-import BaseText from "@/components/atoms/BaseText";
+import { BaseText } from "@/components/atoms";
+import { Ionicons } from "@expo/vector-icons";
+import styled from "styled-components/native";
+import { useResponsiveSize } from "@/hooks";
+
 interface Props {
   isFetchingNextPage: boolean;
   searchQuery: string;
@@ -30,6 +34,7 @@ const RepoItem = memo(({ item }: any) => (
 ));
 
 export default function Presenter(props: Props) {
+  const { hp, wp } = useResponsiveSize();
   const {
     isFetchingNextPage,
     searchQuery,
@@ -42,6 +47,7 @@ export default function Presenter(props: Props) {
     status,
   } = props;
 
+  console.log(hp(100));
   const renderItem = useCallback(({ item }) => <RepoItem item={item} />, []);
   const ListFooterComponent = useCallback(
     () =>
@@ -51,107 +57,64 @@ export default function Presenter(props: Props) {
     [isFetchingNextPage]
   );
   return (
-    <View style={styles.container}>
-      <View style={styles.listContainer}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={handleSearchChange}
-            placeholder="Search repositories..."
-            returnKeyType="search"
-            onSubmitEditing={handleSearchSubmit}
-          />
-          <TouchableOpacity
-            style={styles.searchButton}
-            onPress={handleSearchSubmit}
-          >
-            <Text style={styles.buttonText}>Search</Text>
-          </TouchableOpacity>
+    <Wrapper>
+      <TitleWrapper>
+        <BaseText ft={"titleXXXL900"}>검색</BaseText>
+      </TitleWrapper>
+      <SearchBarWrapper>
+        <TextInput
+          value={searchQuery}
+          onChangeText={handleSearchChange}
+          placeholder="Search repositories..."
+          returnKeyType="search"
+          onSubmitEditing={handleSearchSubmit}
+        />
+        <Ionicons name="search" size={24} color="black" />
+      </SearchBarWrapper>
+      <Text>{totalCount}</Text>
+      {status === "pending" ? (
+        <View>
+          <BaseText ft={"titleXXXL900"}>Loading...</BaseText>
         </View>
-        <Text>{totalCount}</Text>
-        {status === "pending" ? (
-          <View style={styles.loadingContainer}>
-            <BaseText ft={"titleXXXL900"}>Loading...</BaseText>
-          </View>
-        ) : status === "error" ? (
-          <View style={styles.errorContainer}>
-            <Text>Error: {error.message}</Text>
-          </View>
-        ) : (
-          <FlashList
-            data={repositories}
-            renderItem={renderItem}
-            estimatedItemSize={90}
-            keyExtractor={(item) => item.id.toString()}
-            onEndReached={handleEndReached}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={ListFooterComponent}
-            removeClippedSubviews={true}
-            scrollEventThrottle={16}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text>No repositories found</Text>
-              </View>
-            }
-          />
-        )}
-      </View>
-    </View>
+      ) : status === "error" ? (
+        <View>
+          <Text>Error: {error.message}</Text>
+        </View>
+      ) : (
+        <FlashList
+          data={repositories}
+          renderItem={renderItem}
+          estimatedItemSize={90}
+          keyExtractor={(item) => item.id.toString()}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={ListFooterComponent}
+          removeClippedSubviews={true}
+          scrollEventThrottle={16}
+          ListEmptyComponent={
+            <View>
+              <Text>No repositories found</Text>
+            </View>
+          }
+        />
+      )}
+    </Wrapper>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  listContainer: {
-    flex: 1,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: "#f5f5f5",
-  },
-  searchInput: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#BDBDBD",
-    borderRadius: 5,
-    padding: 8,
-    marginRight: 8,
-  },
-  searchButton: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#2196F3",
-    paddingHorizontal: 15,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  loading: {
-    padding: 10,
-    textAlign: "center",
-  },
-});
+
+const Wrapper = styled.View`
+  flex: 1;
+  padding: 20px;
+  /* border: 1px solid red; */
+`;
+
+const TitleWrapper = styled.View`
+  padding: 16px;
+  align-items: center;
+`;
+
+const SearchBarWrapper = styled.View`
+  flex-direction: row;
+  border: 1px solid red;
+  background-color: #f0f0f0;
+`;
