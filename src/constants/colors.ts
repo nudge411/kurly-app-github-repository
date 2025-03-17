@@ -20,6 +20,7 @@ const colors = {
   text_70: "#999999",
   text_60: "#BDBDBD",
 
+  gray_60: "#BDBDBD",
   gray_50: "  #CCCCCC",
   gray_40: "  #E5E5E5",
   gray_30: "  #E4E4E4",

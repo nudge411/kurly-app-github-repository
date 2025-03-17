@@ -1,14 +1,18 @@
 import { useCallback, useState, useMemo } from "react";
-import { decrement, increment } from "@/store/slices/counterSlice";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { githubApi } from "@/api/endpoints";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks";
 import Presenter from "./Presenter";
+import { useSearchAutoComplete } from "@/hooks";
 
 export default function Container() {
+  const dispatch = useAppDispatch();
+  const searchHistory = useAppSelector((state) => state.search.history);
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const debouncedQuery = useDebounce(searchQuery, 500);
+  const autoCompleteResults = useSearchAutoComplete(searchQuery, searchHistory);
 
   const {
     data,
@@ -17,7 +21,6 @@ export default function Container() {
     isFetchingNextPage,
     status,
     error,
-    refetch,
   } = useInfiniteQuery({
     queryKey: ["repositories", debouncedQuery],
     queryFn: async ({ pageParam = 1 }) => {
@@ -32,13 +35,14 @@ export default function Container() {
     },
     initialPageParam: 1,
     enabled: debouncedQuery.length > 0,
+    // enabled: false,
   });
 
   const { repositories, totalCount } = useMemo(() => {
-    if (!data) return { repositories: [], totalCount: 0 };
+    if (!data) return { repositories: [], totalCount: "0" };
     return {
       repositories: data.pages.flatMap((page) => page.items),
-      totalCount: data.pages[0]?.total_count || 0,
+      totalCount: data.pages[0]?.total_count.toLocaleString() || "0",
     };
   }, [data]);
 
@@ -46,8 +50,20 @@ export default function Container() {
     setSearchQuery(text);
   };
 
-  const handleSearchSubmit = () => {
-    refetch();
+  const handleSearchSubmit = (itemQuery?: string) => {
+    const finalQuery = (itemQuery || searchQuery).trim();
+    if (finalQuery) {
+      setSearchQuery(finalQuery);
+      dispatch({ type: "search/addSearchHistory", payload: finalQuery });
+    }
+  };
+
+  const handleClearHistory = () => {
+    dispatch({ type: "search/clearSearchHistory" });
+  };
+
+  const removeHistoryItem = (itemQuery: string) => {
+    dispatch({ type: "search/removeSearchHistory", payload: itemQuery });
   };
 
   const handleEndReached = useCallback(() => {
@@ -67,6 +83,10 @@ export default function Container() {
       repositories={repositories}
       handleEndReached={handleEndReached}
       status={status}
+      searchHistory={searchHistory}
+      handleClearHistory={handleClearHistory}
+      removeHistoryItem={removeHistoryItem}
+      autoCompleteResults={autoCompleteResults}
     />
   );
 }

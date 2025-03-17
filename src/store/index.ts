@@ -1,17 +1,16 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { persistStore, persistReducer } from "redux-persist";
-import counterReducer from "./slices/counterSlice";
+import searchReducer from "./slices/searchSlice";
 
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: ["counter"],
+  whitelist: ["search"],
 };
 
 const rootReducer = combineReducers({
-  counter: counterReducer,
-  // search: searchReducer,
+  search: searchReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

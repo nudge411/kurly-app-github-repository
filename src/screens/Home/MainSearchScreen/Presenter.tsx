@@ -1,28 +1,27 @@
 import { useCallback, memo } from "react";
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Text, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import typography from "@/constants/typography";
 import { BaseText } from "@/components/atoms";
 import { Ionicons } from "@expo/vector-icons";
 import styled from "styled-components/native";
-import { useResponsiveSize } from "@/hooks";
+import { colors } from "@/constants";
+import { hp, wp, sp } from "@/utils/responsive";
+import { SearchHistoryItem } from "@/store/slices/searchSlice";
 
 interface Props {
   isFetchingNextPage: boolean;
   searchQuery: string;
   handleSearchChange: (text: string) => void;
-  handleSearchSubmit: () => void;
-  totalCount: number;
+  handleSearchSubmit: (itemQuery?: string) => void;
+  totalCount: string;
   error: any;
   repositories: any[];
   handleEndReached: () => void;
   status: string;
+  searchHistory: SearchHistoryItem[];
+  handleClearHistory: () => void;
+  removeHistoryItem: (itemQuery: string) => void;
+  autoCompleteResults: SearchHistoryItem[];
 }
 
 const RepoItem = memo(({ item }: any) => (
@@ -34,7 +33,6 @@ const RepoItem = memo(({ item }: any) => (
 ));
 
 export default function Presenter(props: Props) {
-  const { hp, wp } = useResponsiveSize();
   const {
     isFetchingNextPage,
     searchQuery,
@@ -45,34 +43,131 @@ export default function Presenter(props: Props) {
     repositories,
     handleEndReached,
     status,
+    searchHistory,
+    handleClearHistory,
+    removeHistoryItem,
+    autoCompleteResults,
   } = props;
 
-  console.log(hp(100));
   const renderItem = useCallback(({ item }) => <RepoItem item={item} />, []);
   const ListFooterComponent = useCallback(
-    () =>
-      isFetchingNextPage ? (
-        <Text style={styles.loading}>Loading more...</Text>
-      ) : null,
+    () => (isFetchingNextPage ? <Text>Loading more...</Text> : null),
     [isFetchingNextPage]
   );
+
+  const renderContentByStatus = useCallback(() => {
+    const isExistSearchHistory = searchHistory.length > 0;
+
+    if (!isExistSearchHistory) {
+      return (
+        <HistoryWrapper bounces={false} overScrollMode="never">
+          <HistoryHeader>
+            <BaseText ft="bodyL400">최근 검색어가 없습니다</BaseText>
+          </HistoryHeader>
+        </HistoryWrapper>
+      );
+    }
+
+    if (searchQuery && isExistSearchHistory) {
+      return (
+        <HistoryWrapper bounces={false} overScrollMode="never">
+          <HistoryHeader />
+          {autoCompleteResults.map((item, index) => (
+            <HistoryItem
+              key={index}
+              onPress={() => handleSearchSubmit(item.query)}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  size={20}
+                  name="time-outline"
+                  color={colors.gray_30}
+                />
+                <BaseText style={{ marginLeft: 4 }} ft="bodyL400">
+                  {item.query}
+                </BaseText>
+              </View>
+              <DateWrapper onPress={() => removeHistoryItem(item.query)}>
+                <BaseText ft="bodyL400" color={colors.text_80}>
+                  {item.formattedDate}
+                </BaseText>
+              </DateWrapper>
+            </HistoryItem>
+          ))}
+        </HistoryWrapper>
+      );
+    }
+
+    if (!searchQuery && isExistSearchHistory) {
+      return (
+        <HistoryWrapper bounces={false} overScrollMode="never">
+          <HistoryHeader>
+            <BaseText ft="bodyL400">최근검색</BaseText>
+            <HistoryClearButton onPress={() => handleClearHistory()}>
+              <BaseText ft="bodyS400" color={colors.text_70}>
+                전체 삭제
+              </BaseText>
+            </HistoryClearButton>
+          </HistoryHeader>
+          {searchHistory.map((item, index) => (
+            <HistoryItem
+              key={index}
+              onPress={() => handleSearchSubmit(item.query)}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  size={20}
+                  name="time-outline"
+                  color={colors.gray_30}
+                />
+                <BaseText style={{ marginLeft: 4 }} ft="bodyL400">
+                  {item.query}
+                </BaseText>
+              </View>
+              <RemoveItemButton onPress={() => removeHistoryItem(item.query)}>
+                <Ionicons name="close" size={16} color={colors.gray_60} />
+              </RemoveItemButton>
+            </HistoryItem>
+          ))}
+          <View style={{ alignItems: "center" }}>
+            <BaseText ft="bodyM400">최근 10건의 검색어만 보여집니다</BaseText>
+          </View>
+        </HistoryWrapper>
+      );
+    }
+  }, [searchQuery, searchHistory]);
+
   return (
     <Wrapper>
       <TitleWrapper>
-        <BaseText ft={"titleXXXL900"}>검색</BaseText>
+        <BaseText ft={"titleXXL900"}>검색</BaseText>
       </TitleWrapper>
       <SearchBarWrapper>
-        <TextInput
-          value={searchQuery}
-          onChangeText={handleSearchChange}
-          placeholder="Search repositories..."
-          returnKeyType="search"
-          onSubmitEditing={handleSearchSubmit}
-        />
-        <Ionicons name="search" size={24} color="black" />
+        <SearchBar>
+          <Ionicons name="search" size={24} color={"black"} />
+          <SearchInput
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.nativeEvent.text)}
+            style={{ fontFamily: "Pretendard-Regular", fontSize: 16 }}
+            placeholder={"검색어를 입력해주세요"}
+            blurOnSubmit={true}
+            enablesReturnKeyAutomatically={true}
+            onSubmitEditing={() => handleSearchSubmit()}
+            returnKeyType="search"
+          />
+          {searchQuery && (
+            <ClearButton onPress={() => handleSearchChange("")}>
+              <Ionicons name="close-circle" size={24} color={colors.gray_60} />
+            </ClearButton>
+          )}
+        </SearchBar>
+        <CancelButton>
+          <BaseText ft={"bodyL400"} color={colors.primary_50}>
+            취소
+          </BaseText>
+        </CancelButton>
       </SearchBarWrapper>
-      <Text>{totalCount}</Text>
-      {status === "pending" ? (
+      {/* {status === "pending" ? (
         <View>
           <BaseText ft={"titleXXXL900"}>Loading...</BaseText>
         </View>
@@ -80,23 +175,34 @@ export default function Presenter(props: Props) {
         <View>
           <Text>Error: {error.message}</Text>
         </View>
+      ) : null} */}
+      {repositories.length > 0 ? (
+        <View style={{ flex: 1 }}>
+          <CountWrapper>
+            <BaseText ft={"bodyM700"}>검색 결과 </BaseText>
+            <BaseText ft={"bodyM400"} color={colors.text_80}>
+              {totalCount}개 저장소
+            </BaseText>
+          </CountWrapper>
+          <FlashList
+            data={repositories}
+            renderItem={renderItem}
+            estimatedItemSize={90}
+            keyExtractor={(item) => item.id.toString()}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={ListFooterComponent}
+            removeClippedSubviews={true}
+            scrollEventThrottle={16}
+            ListEmptyComponent={
+              <View>
+                <Text>No repositories found</Text>
+              </View>
+            }
+          />
+        </View>
       ) : (
-        <FlashList
-          data={repositories}
-          renderItem={renderItem}
-          estimatedItemSize={90}
-          keyExtractor={(item) => item.id.toString()}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={ListFooterComponent}
-          removeClippedSubviews={true}
-          scrollEventThrottle={16}
-          ListEmptyComponent={
-            <View>
-              <Text>No repositories found</Text>
-            </View>
-          }
-        />
+        renderContentByStatus()
       )}
     </Wrapper>
   );
@@ -104,17 +210,78 @@ export default function Presenter(props: Props) {
 
 const Wrapper = styled.View`
   flex: 1;
-  padding: 20px;
-  /* border: 1px solid red; */
 `;
 
 const TitleWrapper = styled.View`
-  padding: 16px;
+  padding: ${sp(16)}px;
   align-items: center;
 `;
 
 const SearchBarWrapper = styled.View`
   flex-direction: row;
-  border: 1px solid red;
-  background-color: #f0f0f0;
+  align-items: center;
+  padding: 0 ${sp(20)}px;
+`;
+
+const SearchBar = styled.View`
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  padding: ${sp(10)}px ${sp(18)}px;
+  border-radius: 100px;
+  background-color: ${colors.gray_10};
+  border: 1px solid ${colors.gray_40};
+
+  shadow-color: #000000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.2;
+  shadow-radius: 2px;
+  elevation: 4;
+`;
+
+const SearchInput = styled.TextInput`
+  flex: 1;
+  height: ${hp(30)}px;
+  margin-left: ${wp(4)}px;
+`;
+
+const CancelButton = styled.TouchableOpacity`
+  padding: ${sp(10)}px;
+`;
+
+const ClearButton = styled.TouchableOpacity``;
+
+const CountWrapper = styled.View`
+  flex-direction: row;
+  margin: ${16}px 0;
+`;
+
+const HistoryWrapper = styled.ScrollView`
+  padding: 0 ${sp(20)}px;
+`;
+
+const HistoryHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: ${sp(16)}px;
+`;
+
+const HistoryClearButton = styled.TouchableOpacity``;
+
+const HistoryItem = styled.TouchableOpacity`
+  height: ${hp(54)}px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const RemoveItemButton = styled.TouchableOpacity`
+  justify-content: center;
+  align-items: center;
+  padding: ${sp(16)}px;
+`;
+
+const DateWrapper = styled.View`
+  justify-content: center;
+  align-items: center;
 `;
