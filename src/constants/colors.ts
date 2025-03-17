@@ -2,16 +2,7 @@ const colors = {
   white: "#ffffff",
   black: "#000000",
 
-  primary_90: "#601624",
-  primary_80: "#891F34",
-  primary_70: "#B32944",
-  primary_60: "#D33C5A",
-  primary_50: "#F8496C",
-  primary_40: "#F16A85",
-  primary_30: "#F38198",
-  primary_20: "#F8B0BE",
-  primary_10: "#FBD0D9",
-  primary_5: "#FDE8EC",
+  primary_50: "#5f0080",
 
   text_100: "#111111",
   text_90: "#3F3F3F",
