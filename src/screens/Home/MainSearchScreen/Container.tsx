@@ -4,6 +4,7 @@ import { githubApi } from "@/api/endpoints";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks";
 import Presenter from "./Presenter";
+import useSearchAutoComplete from "@/hooks/useSearchAutoComplete";
 
 export default function Container() {
   const dispatch = useAppDispatch();
@@ -11,6 +12,7 @@ export default function Container() {
 
   const [searchQuery, setSearchQuery] = useState<string>("");
   const debouncedQuery = useDebounce(searchQuery, 500);
+  const autoCompleteResults = useSearchAutoComplete(searchQuery, searchHistory);
 
   const {
     data,
@@ -84,6 +86,7 @@ export default function Container() {
       searchHistory={searchHistory}
       handleClearHistory={handleClearHistory}
       removeHistoryItem={removeHistoryItem}
+      autoCompleteResults={autoCompleteResults}
     />
   );
 }

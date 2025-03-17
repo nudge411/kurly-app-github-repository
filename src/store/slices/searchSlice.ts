@@ -1,8 +1,10 @@
+import { formatDateMMDD } from "@/utils/format";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface SearchHistoryItem {
   query: string;
   timestamp: number;
+  formattedDate: string;
 }
 
 export interface SearchState {
@@ -21,9 +23,10 @@ const searchSlice = createSlice({
       const MAX_HISTORY = 10;
       const newQuery = action.payload;
       const timestamp = Date.now();
+      const formattedDate = formatDateMMDD(timestamp);
 
       state.history = [
-        { query: newQuery, timestamp },
+        { query: newQuery, timestamp, formattedDate },
         ...state.history.filter((item) => item.query !== newQuery),
       ].slice(0, MAX_HISTORY);
     },
