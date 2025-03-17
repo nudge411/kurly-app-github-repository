@@ -5,6 +5,7 @@ import { store, persistor } from "@/store";
 import { MainSearchScreen } from "@/screens/Home";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+import RootStackNavigator from "./navigation/RootStackNavigator";
 
 const queryClient = new QueryClient();
 
@@ -24,9 +25,7 @@ export default function App() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
-          <SafeAreaView style={{ flex: 1 }}>
-            <MainSearchScreen />
-          </SafeAreaView>
+          <RootStackNavigator />
         </QueryClientProvider>
       </PersistGate>
     </Provider>

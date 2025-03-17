@@ -1,4 +1,4 @@
-import { useCallback, memo } from "react";
+import { useCallback } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { BaseText } from "@/components/atoms";
@@ -21,29 +21,13 @@ interface Props {
   handleEndReached: () => void;
   searchHistory: SearchHistoryItem[];
   handleClearHistory: () => void;
+  handlePressItem: (uri: string, title: string) => void;
   removeHistoryItem: (itemQuery: string) => void;
   autoCompleteResults: SearchHistoryItem[];
   isLoading: boolean;
   isError: boolean;
   isSuccess: boolean;
 }
-
-const RepoItem = memo(({ item }: { item: GitHubRepository }) => (
-  <RepoItemWrapper key={item.id}>
-    <AvatarImage
-      source={{ uri: item.owner.avatar_url }}
-      contentFit="cover"
-      transition={300}
-      cachePolicy="memory-disk"
-    />
-    <RepoItemContent>
-      <BaseText ft="titleXL700">{item.name}</BaseText>
-      <BaseText ft="bodyS400" color={colors.text_80}>
-        {item.owner.login}
-      </BaseText>
-    </RepoItemContent>
-  </RepoItemWrapper>
-));
 
 export default function Presenter(props: Props) {
   const {
@@ -57,6 +41,7 @@ export default function Presenter(props: Props) {
     handleEndReached,
     searchHistory,
     handleClearHistory,
+    handlePressItem,
     removeHistoryItem,
     autoCompleteResults,
     isLoading,
@@ -64,18 +49,36 @@ export default function Presenter(props: Props) {
     isSuccess,
   } = props;
 
+  const RepoItem = ({ item }: { item: GitHubRepository }) => (
+    <RepoItemWrapper
+      key={item.id}
+      onPress={() => handlePressItem(item.html_url, item.name)}
+    >
+      <AvatarImage
+        source={{ uri: item.owner.avatar_url }}
+        contentFit="cover"
+        transition={300}
+        cachePolicy="memory-disk"
+      />
+      <RepoItemContent>
+        <BaseText ft="titleXL700">{item.name}</BaseText>
+        <BaseText ft="bodyS400" color={colors.text_80}>
+          {item.owner.login}
+        </BaseText>
+      </RepoItemContent>
+    </RepoItemWrapper>
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: GitHubRepository }) => <RepoItem item={item} />,
     []
   );
 
-  const ListFooterComponent = useCallback(
-    () =>
-      isFetchingNextPage ? (
-        <ActivityIndicator size="large" color={colors.primary_50} />
-      ) : null,
-    [isFetchingNextPage]
-  );
+  const ListFooterComponent = useCallback(() => {
+    return isFetchingNextPage ? (
+      <ActivityIndicator size="large" color={colors.primary_50} />
+    ) : null;
+  }, [isFetchingNextPage]);
 
   const renderHistoryItem = (item, showCloseButton = true) => (
     <HistoryItem
@@ -165,7 +168,7 @@ export default function Presenter(props: Props) {
     () => (
       <SearchBarWrapper>
         <SearchBar>
-          <Ionicons name="search" size={24} color={"black"} />
+          <Ionicons name="search" size={24} color={colors.primary_50} />
           <SearchInput
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.nativeEvent.text)}
@@ -219,14 +222,11 @@ export default function Presenter(props: Props) {
         />
       </RepoWrapper>
     ),
-    [totalCount, repositories]
+    [totalCount, repositories, isFetchingNextPage]
   );
 
   return (
     <Wrapper>
-      <TitleWrapper>
-        <BaseText ft={"titleXXL900"}>검색</BaseText>
-      </TitleWrapper>
       {renderSearchBar()}
       {isLoading ? (
         renderLoadingView()
@@ -245,6 +245,8 @@ export default function Presenter(props: Props) {
 
 const Wrapper = styled.View`
   flex: 1;
+  padding-top: ${hp(20)}px;
+  background-color: ${colors.white};
 `;
 
 const TitleWrapper = styled.View`
