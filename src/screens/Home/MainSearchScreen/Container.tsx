@@ -4,7 +4,7 @@ import { githubApi } from "@/api/endpoints";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks";
 import Presenter from "./Presenter";
-import useSearchAutoComplete from "@/hooks/useSearchAutoComplete";
+import { useSearchAutoComplete } from "@/hooks";
 
 export default function Container() {
   const dispatch = useAppDispatch();
@@ -21,7 +21,6 @@ export default function Container() {
     isFetchingNextPage,
     status,
     error,
-    refetch,
   } = useInfiniteQuery({
     queryKey: ["repositories", debouncedQuery],
     queryFn: async ({ pageParam = 1 }) => {
@@ -35,8 +34,8 @@ export default function Container() {
       return lastPage.items.length === 30 ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
-    // enabled: debouncedQuery.length > 0,
-    enabled: false,
+    enabled: debouncedQuery.length > 0,
+    // enabled: false,
   });
 
   const { repositories, totalCount } = useMemo(() => {
@@ -51,10 +50,11 @@ export default function Container() {
     setSearchQuery(text);
   };
 
-  const handleSearchSubmit = () => {
-    if (searchQuery.trim()) {
-      dispatch({ type: "search/addSearchHistory", payload: searchQuery });
-      // refetch();
+  const handleSearchSubmit = (itemQuery?: string) => {
+    const finalQuery = (itemQuery || searchQuery).trim();
+    if (finalQuery) {
+      setSearchQuery(finalQuery);
+      dispatch({ type: "search/addSearchHistory", payload: finalQuery });
     }
   };
 

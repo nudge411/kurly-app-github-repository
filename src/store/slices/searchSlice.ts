@@ -28,7 +28,9 @@ const searchSlice = createSlice({
       state.history = [
         { query: newQuery, timestamp, formattedDate },
         ...state.history.filter((item) => item.query !== newQuery),
-      ].slice(0, MAX_HISTORY);
+      ]
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, MAX_HISTORY);
     },
     removeSearchHistory: (state, action: PayloadAction<string>) => {
       state.history = state.history.filter(
