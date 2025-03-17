@@ -6,6 +6,8 @@ import { Ionicons } from "@expo/vector-icons";
 import styled from "styled-components/native";
 import { colors, typography } from "@/constants";
 import { hp, wp, sp } from "@/utils/responsive";
+import { SearchHistoryItem } from "@/store/slices/searchSlice";
+
 interface Props {
   isFetchingNextPage: boolean;
   searchQuery: string;
@@ -16,6 +18,9 @@ interface Props {
   repositories: any[];
   handleEndReached: () => void;
   status: string;
+  searchHistory: SearchHistoryItem[];
+  handleClearHistory: () => void;
+  removeHistoryItem: (itemQuery: string) => void;
 }
 
 const RepoItem = memo(({ item }: any) => (
@@ -37,6 +42,9 @@ export default function Presenter(props: Props) {
     repositories,
     handleEndReached,
     status,
+    searchHistory,
+    handleClearHistory,
+    removeHistoryItem,
   } = props;
 
   const renderItem = useCallback(({ item }) => <RepoItem item={item} />, []);
@@ -44,6 +52,65 @@ export default function Presenter(props: Props) {
     () => (isFetchingNextPage ? <Text>Loading more...</Text> : null),
     [isFetchingNextPage]
   );
+
+  const renderContentByStatus = () => {
+    return searchQuery ? (
+      <View style={{ borderWidth: 1, flex: 1 }}>
+        <BaseText ft={"titleL700"}>자동 완성</BaseText>
+      </View>
+    ) : searchHistory.length > 0 ? (
+      <HistoryWrapper>
+        <HistoryHeader>
+          <BaseText ft="bodyM400">최근검색</BaseText>
+          <HistoryClearButton onPress={() => handleClearHistory()}>
+            <BaseText ft="bodyS400" color={colors.text_70}>
+              전체 삭제
+            </BaseText>
+          </HistoryClearButton>
+        </HistoryHeader>
+        {searchHistory.map((item, index) => (
+          <HistoryItem key={index}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons size={16} name="time-outline" color={colors.gray_30} />
+              <BaseText style={{ marginLeft: 4 }} ft="bodyL400">
+                {item.query}
+              </BaseText>
+            </View>
+            <RemoveItemButton onPress={() => removeHistoryItem(item.query)}>
+              <Ionicons name="close" size={16} color={colors.gray_60} />
+            </RemoveItemButton>
+          </HistoryItem>
+        ))}
+      </HistoryWrapper>
+    ) : (
+      <View style={{ borderWidth: 1, flex: 1 }} />
+    );
+    // switch (status) {
+    //   case "pending":
+    //     return <BaseText ft={"titleXXXL900"}>Loading...</BaseText>;
+    //   case "error":
+    //     return <Text>Error: {error.message}</Text>;
+    //   default:
+    //     return (
+    //       <FlashList
+    //         data={repositories}
+    //         renderItem={renderItem}
+    //         estimatedItemSize={90}
+    //         keyExtractor={(item) => item.id.toString()}
+    //         onEndReached={handleEndReached}
+    //         onEndReachedThreshold={0.5}
+    //         ListFooterComponent={ListFooterComponent}
+    //         removeClippedSubviews={true}
+    //         scrollEventThrottle={16}
+    //         ListEmptyComponent={
+    //           <View>
+    //             <Text>No repositories found</Text>
+    //           </View>
+    //         }
+    //       />
+    //     );
+    // }
+  };
 
   return (
     <Wrapper>
@@ -75,12 +142,13 @@ export default function Presenter(props: Props) {
           </BaseText>
         </CancelButton>
       </SearchBarWrapper>
-      <CountWrapper>
+      {/* <CountWrapper>
         <BaseText ft={"bodyM700"}>검색 결과 </BaseText>
         <BaseText ft={"bodyM400"} color={colors.text_80}>
           {totalCount}개 저장소
         </BaseText>
-      </CountWrapper>
+      </CountWrapper> */}
+      {renderContentByStatus()}
       {/* {status === "pending" ? (
         <View>
           <BaseText ft={"titleXXXL900"}>Loading...</BaseText>
@@ -151,4 +219,25 @@ const ClearButton = styled.TouchableOpacity``;
 const CountWrapper = styled.View`
   flex-direction: row;
   margin: ${10}px 0;
+`;
+
+const HistoryWrapper = styled.View``;
+
+const HistoryHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  margin: ${sp(10)}px 0;
+`;
+
+const HistoryClearButton = styled.TouchableOpacity``;
+
+const HistoryItem = styled.TouchableOpacity`
+  flex-direction: row;
+  justify-content: space-between;
+`;
+
+const RemoveItemButton = styled.TouchableOpacity`
+  justify-content: center;
+  align-items: center;
+  padding: ${sp(16)}px;
 `;

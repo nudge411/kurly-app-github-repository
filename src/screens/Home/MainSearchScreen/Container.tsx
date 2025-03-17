@@ -1,5 +1,4 @@
 import { useCallback, useState, useMemo } from "react";
-import { decrement, increment } from "@/store/slices/counterSlice";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { githubApi } from "@/api/endpoints";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -7,6 +6,9 @@ import { useDebounce } from "@/hooks";
 import Presenter from "./Presenter";
 
 export default function Container() {
+  const dispatch = useAppDispatch();
+  const searchHistory = useAppSelector((state) => state.search.history);
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const debouncedQuery = useDebounce(searchQuery, 500);
 
@@ -31,7 +33,8 @@ export default function Container() {
       return lastPage.items.length === 30 ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
-    enabled: debouncedQuery.length > 0,
+    // enabled: debouncedQuery.length > 0,
+    enabled: false,
   });
 
   const { repositories, totalCount } = useMemo(() => {
@@ -47,7 +50,18 @@ export default function Container() {
   };
 
   const handleSearchSubmit = () => {
-    refetch();
+    if (searchQuery.trim()) {
+      dispatch({ type: "search/addSearchHistory", payload: searchQuery });
+      // refetch();
+    }
+  };
+
+  const handleClearHistory = () => {
+    dispatch({ type: "search/clearSearchHistory" });
+  };
+
+  const removeHistoryItem = (itemQuery: string) => {
+    dispatch({ type: "search/removeSearchHistory", payload: itemQuery });
   };
 
   const handleEndReached = useCallback(() => {
@@ -67,6 +81,9 @@ export default function Container() {
       repositories={repositories}
       handleEndReached={handleEndReached}
       status={status}
+      searchHistory={searchHistory}
+      handleClearHistory={handleClearHistory}
+      removeHistoryItem={removeHistoryItem}
     />
   );
 }
