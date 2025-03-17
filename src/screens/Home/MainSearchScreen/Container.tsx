@@ -5,9 +5,12 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 // import { useDebounce } from "@/hooks";
 import Presenter from "./Presenter";
 import { useSearchAutoComplete } from "@/hooks";
+import { useNavigation } from "@react-navigation/native";
+import { NavigationProp } from "@/types/navigation";
 
 export default function Container() {
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<NavigationProp<"MainSearchScreen">>();
   const searchHistory = useAppSelector((state) => state.search.history);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -78,6 +81,10 @@ export default function Container() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const handlePressItem = useCallback((uri: string, title: string) => {
+    navigation.navigate("WebViewScreen", { uri, title });
+  }, []);
+
   return (
     <Presenter
       isFetchingNextPage={isFetchingNextPage}
@@ -90,6 +97,7 @@ export default function Container() {
       handleEndReached={handleEndReached}
       searchHistory={searchHistory}
       handleClearHistory={handleClearHistory}
+      handlePressItem={handlePressItem}
       removeHistoryItem={removeHistoryItem}
       autoCompleteResults={autoCompleteResults}
       isLoading={isLoading}
