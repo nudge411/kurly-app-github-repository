@@ -2,7 +2,7 @@ import { useCallback, useState, useMemo } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { githubApi } from "@/api/endpoints";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useDebounce } from "@/hooks";
+// import { useDebounce } from "@/hooks";
 import Presenter from "./Presenter";
 import { useSearchAutoComplete } from "@/hooks";
 
@@ -11,7 +11,7 @@ export default function Container() {
   const searchHistory = useAppSelector((state) => state.search.history);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const debouncedQuery = useDebounce(searchQuery, 500);
+  const [queryKey, setQueryKey] = useState("");
   const autoCompleteResults = useSearchAutoComplete(searchQuery, searchHistory);
 
   const {
@@ -19,13 +19,15 @@ export default function Container() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    status,
     error,
+    isLoading,
+    isError,
+    isSuccess,
   } = useInfiniteQuery({
-    queryKey: ["repositories", debouncedQuery],
+    queryKey: ["repositories", queryKey],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await githubApi.searchRepositories({
-        q: debouncedQuery,
+        q: searchQuery,
         page: pageParam,
       });
       return response.data;
@@ -34,8 +36,7 @@ export default function Container() {
       return lastPage.items.length === 30 ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
-    enabled: debouncedQuery.length > 0,
-    // enabled: false,
+    enabled: queryKey.length > 0,
   });
 
   const { repositories, totalCount } = useMemo(() => {
@@ -46,25 +47,30 @@ export default function Container() {
     };
   }, [data]);
 
-  const handleSearchChange = (text) => {
-    setSearchQuery(text);
-  };
+  const handleSearchChange = useCallback((query?: string) => {
+    if (!query) setQueryKey("");
+    setSearchQuery(query);
+  }, []);
 
-  const handleSearchSubmit = (itemQuery?: string) => {
-    const finalQuery = (itemQuery || searchQuery).trim();
-    if (finalQuery) {
-      setSearchQuery(finalQuery);
-      dispatch({ type: "search/addSearchHistory", payload: finalQuery });
-    }
-  };
+  const handleSearchSubmit = useCallback(
+    (itemQuery?: string) => {
+      const finalQuery = (itemQuery || searchQuery).trim();
+      if (finalQuery) {
+        setSearchQuery(finalQuery);
+        setQueryKey(finalQuery);
+        dispatch({ type: "search/addSearchHistory", payload: finalQuery });
+      }
+    },
+    [searchQuery]
+  );
 
-  const handleClearHistory = () => {
+  const handleClearHistory = useCallback(() => {
     dispatch({ type: "search/clearSearchHistory" });
-  };
+  }, []);
 
-  const removeHistoryItem = (itemQuery: string) => {
+  const removeHistoryItem = useCallback((itemQuery: string) => {
     dispatch({ type: "search/removeSearchHistory", payload: itemQuery });
-  };
+  }, []);
 
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -82,11 +88,13 @@ export default function Container() {
       error={error}
       repositories={repositories}
       handleEndReached={handleEndReached}
-      status={status}
       searchHistory={searchHistory}
       handleClearHistory={handleClearHistory}
       removeHistoryItem={removeHistoryItem}
       autoCompleteResults={autoCompleteResults}
+      isLoading={isLoading}
+      isError={isError}
+      isSuccess={isSuccess}
     />
   );
 }
