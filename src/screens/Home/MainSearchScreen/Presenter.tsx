@@ -139,7 +139,7 @@ export default function Presenter(props: Props) {
       <>
         <HistoryHeader>
           <BaseText ft="bodyL400">최근검색</BaseText>
-          <HistoryClearButton onPress={() => handleClearHistory}>
+          <HistoryClearButton onPress={() => handleClearHistory()}>
             <BaseText ft="bodyS400" color={colors.text_70}>
               전체 삭제
             </BaseText>
@@ -188,6 +188,7 @@ export default function Presenter(props: Props) {
               onSubmitEditing={() => handleSearchSubmit()}
               returnKeyType="search"
               autoFocus
+              autoCapitalize="none"
             />
             {searchQuery && (
               <ClearButton onPress={() => handleSearchChange("")}>
@@ -242,7 +243,7 @@ export default function Presenter(props: Props) {
           estimatedItemSize={hp(80)}
           keyExtractor={(item) => item.id.toString()}
           onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.7}
           ListFooterComponent={ListFooterComponent}
           removeClippedSubviews={true}
           scrollEventThrottle={16}
