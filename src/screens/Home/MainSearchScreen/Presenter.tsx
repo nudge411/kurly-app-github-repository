@@ -243,7 +243,7 @@ export default function Presenter(props: Props) {
           estimatedItemSize={hp(80)}
           keyExtractor={(item) => item.id.toString()}
           onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.7}
           ListFooterComponent={ListFooterComponent}
           removeClippedSubviews={true}
           scrollEventThrottle={16}
