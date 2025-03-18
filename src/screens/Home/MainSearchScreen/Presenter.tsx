@@ -13,8 +13,11 @@ import { GitHubRepository } from "@/api/endpoints/github/type";
 interface Props {
   isFetchingNextPage: boolean;
   searchQuery: string;
+  setInputMode: (on: boolean) => void;
+  inputMode: boolean;
   handleSearchChange: (text: string) => void;
   handleSearchSubmit: (itemQuery?: string) => void;
+  handleCancel: () => void;
   totalCount: string;
   error: Error;
   repositories: GitHubRepository[];
@@ -33,8 +36,11 @@ export default function Presenter(props: Props) {
   const {
     isFetchingNextPage,
     searchQuery,
+    setInputMode,
+    inputMode,
     handleSearchChange,
     handleSearchSubmit,
+    handleCancel,
     totalCount,
     error,
     repositories,
@@ -76,7 +82,9 @@ export default function Presenter(props: Props) {
 
   const ListFooterComponent = useCallback(() => {
     return isFetchingNextPage ? (
-      <ActivityIndicator size="large" color={colors.primary_50} />
+      <View style={{ paddingVertical: hp(20) }}>
+        <ActivityIndicator size="large" color={colors.primary_50} />
+      </View>
     ) : null;
   }, [isFetchingNextPage]);
 
@@ -131,7 +139,7 @@ export default function Presenter(props: Props) {
       <>
         <HistoryHeader>
           <BaseText ft="bodyL400">최근검색</BaseText>
-          <HistoryClearButton onPress={() => handleClearHistory()}>
+          <HistoryClearButton onPress={() => handleClearHistory}>
             <BaseText ft="bodyS400" color={colors.text_70}>
               전체 삭제
             </BaseText>
@@ -165,34 +173,58 @@ export default function Presenter(props: Props) {
   );
 
   const renderSearchBar = useCallback(
-    () => (
-      <SearchBarWrapper>
-        <SearchBar>
-          <Ionicons name="search" size={24} color={colors.primary_50} />
-          <SearchInput
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.nativeEvent.text)}
-            style={{ fontFamily: "Pretendard-Regular", fontSize: 16 }}
-            placeholder={"검색어를 입력해주세요"}
-            blurOnSubmit={true}
-            enablesReturnKeyAutomatically={true}
-            onSubmitEditing={() => handleSearchSubmit()}
-            returnKeyType="search"
-          />
+    () =>
+      inputMode ? (
+        <SearchBarWrapper>
+          <SearchBar>
+            <Ionicons name="search" size={24} color={colors.primary_50} />
+            <SearchInput
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.nativeEvent.text)}
+              style={{ fontFamily: "Pretendard-Regular", fontSize: 16 }}
+              placeholder={"검색어를 입력해주세요"}
+              blurOnSubmit={true}
+              enablesReturnKeyAutomatically={true}
+              onSubmitEditing={() => handleSearchSubmit()}
+              returnKeyType="search"
+              autoFocus
+            />
+            {searchQuery && (
+              <ClearButton onPress={() => handleSearchChange("")}>
+                <Ionicons
+                  name="close-circle"
+                  size={24}
+                  color={colors.gray_60}
+                />
+              </ClearButton>
+            )}
+          </SearchBar>
+          <CancelButton onPress={handleCancel}>
+            <BaseText ft={"bodyL700"} color={colors.primary_50}>
+              취소
+            </BaseText>
+          </CancelButton>
+        </SearchBarWrapper>
+      ) : (
+        <SearchBarButton onPress={() => setInputMode(true)}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="search" size={24} color={colors.primary_50} />
+            <BaseText
+              style={{ marginLeft: wp(4) }}
+              ft={"titleL400"}
+              color={colors.text_80}
+            >
+              {searchQuery || "검색어를 입력해주세요"}
+            </BaseText>
+          </View>
           {searchQuery && (
             <ClearButton onPress={() => handleSearchChange("")}>
               <Ionicons name="close-circle" size={24} color={colors.gray_60} />
             </ClearButton>
           )}
-        </SearchBar>
-        <CancelButton>
-          <BaseText ft={"bodyL700"} color={colors.primary_50}>
-            취소
-          </BaseText>
-        </CancelButton>
-      </SearchBarWrapper>
-    ),
-    [searchQuery, handleSearchSubmit, handleSearchChange]
+        </SearchBarButton>
+      ),
+    [searchQuery, handleSearchSubmit, handleSearchChange, inputMode]
   );
 
   const renderResultView = useCallback(
@@ -249,15 +281,26 @@ const Wrapper = styled.View`
   background-color: ${colors.white};
 `;
 
-const TitleWrapper = styled.View`
-  padding: ${sp(16)}px;
-  align-items: center;
-`;
-
 const SearchBarWrapper = styled.View`
   flex-direction: row;
   align-items: center;
-  padding: 0 ${sp(20)}px;
+  margin: 0 ${sp(20)}px;
+`;
+
+const SearchBarButton = styled.TouchableOpacity`
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 0px ${sp(20)}px;
+  padding: ${sp(10)}px ${sp(18)}px;
+  border-radius: 100px;
+  background-color: ${colors.gray_10};
+  border: 1px solid ${colors.gray_40};
+
+  shadow-color: #000000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.2;
+  shadow-radius: 2px;
+  elevation: 4;
 `;
 
 const SearchBar = styled.View`
@@ -278,8 +321,8 @@ const SearchBar = styled.View`
 
 const SearchInput = styled.TextInput`
   flex: 1;
-  height: ${hp(30)}px;
   margin-left: ${wp(4)}px;
+  padding: 0;
 `;
 
 const CancelButton = styled.TouchableOpacity`
