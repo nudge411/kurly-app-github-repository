@@ -14,9 +14,9 @@ export default function Container() {
   const searchHistory = useAppSelector((state) => state.search.history);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [queryKey, setQueryKey] = useState("");
+  const [queryKey, setQueryKey] = useState<string>("");
+  const [inputMode, setInputMode] = useState<boolean>(false);
   const autoCompleteResults = useSearchAutoComplete(searchQuery, searchHistory);
-
   const {
     data,
     fetchNextPage,
@@ -63,6 +63,7 @@ export default function Container() {
         setQueryKey(finalQuery);
         dispatch({ type: "search/addSearchHistory", payload: finalQuery });
       }
+      setInputMode(false);
     },
     [searchQuery]
   );
@@ -85,12 +86,20 @@ export default function Container() {
     navigation.navigate("WebViewScreen", { uri, title });
   }, []);
 
+  const handleCancel = useCallback(() => {
+    handleSearchChange("");
+    setInputMode(false);
+  }, []);
+
   return (
     <Presenter
       isFetchingNextPage={isFetchingNextPage}
       searchQuery={searchQuery}
+      setInputMode={setInputMode}
+      inputMode={inputMode}
       handleSearchChange={handleSearchChange}
       handleSearchSubmit={handleSearchSubmit}
+      handleCancel={handleCancel}
       totalCount={totalCount}
       error={error}
       repositories={repositories}
